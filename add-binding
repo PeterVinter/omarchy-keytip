@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# add-binding <keys> <name> <command>
+#
+# Appends   o.bind("<keys>", "<name>", { launch = "<command>" })   to
+# ~/.config/hypr/bindings.lua, reloads Hyprland, and puts the file back if
+# the reload reports a config error. The previous file is kept as
+# ~/.local/state/peter.keytip/bindings.lua.before.
+#
+# Exit: 0 added, 1 refused or rolled back.
+
+keys=$1
+name=$2
+command=$3
+file="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/bindings.lua"
+state="${XDG_STATE_HOME:-$HOME/.local/state}/peter.keytip"
+
+fail() {
+  echo "keytip: $1" >&2
+  exit 1
+}
+
+# Only modifier + one letter or digit, exactly as the plugin proposes them.
+[[ $keys =~ ^(SUPER|SHIFT|CTRL|ALT)(\ \+\ (SUPER|SHIFT|CTRL|ALT)){0,3}\ \+\ [A-Z0-9]$ ]] || fail "refusing keys: $keys"
+[[ -n $name && ${#name} -le 60 && $name != *[[:cntrl:]]* ]] || fail "refusing name"
+[[ -n $command && ${#command} -le 400 && $command != *[[:cntrl:]]* ]] || fail "refusing command"
+[[ -f $file ]] || fail "missing $file"
+command -v lua >/dev/null || fail "lua is needed to quote the binding"
+
+# The key must still be free: the config may have changed since the hint appeared.
+if grep -qF "\"$keys\"" "$file"; then
+  fail "$keys is already bound in $file"
+fi
+
+# %q produces a Lua string literal, so nothing in the name or command can
+# break out of its quotes.
+line=$(lua -E - "$keys" "$name" "$command" <<<'io.write(string.format("o.bind(%q, %q, { launch = %q })", arg[1], arg[2], arg[3]))') || fail "could not quote the binding"
+[[ $line == o.bind\(* ]] || fail "could not quote the binding"
+
+mkdir -p "$state" || fail "no state directory"
+backup="$state/bindings.lua.before"
+cp -p "$file" "$backup" || fail "could not back up $file"
+
+printf '\n-- %s (added by Keytip)\n%s\n' "$name" "$line" >>"$file" || fail "could not write $file"
+
+hyprctl reload >/dev/null 2>&1
+errors=$(hyprctl configerrors 2>/dev/null | tr -d '[:space:]')
+if [[ -n $errors ]]; then
+  cp -p "$backup" "$file"
+  hyprctl reload >/dev/null 2>&1
+  fail "Hyprland rejected the binding; bindings.lua restored"
+fi
+
+exit 0

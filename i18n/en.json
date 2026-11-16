@@ -1,0 +1,10 @@
+{
+  "ask.title": "%1 has no shortcut",
+  "ask.pick": "Pick one to add it:",
+  "ask.none": "No free combination to suggest",
+  "ask.never": "Don't ask for this app",
+  "ask.close": "Close",
+  "saving": "Adding %1…",
+  "saved": "%1 now opens %2",
+  "error": "Could not add the shortcut. bindings.lua is unchanged."
+}

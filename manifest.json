@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "peter.keytip",
+  "name": "Keytip",
+  "version": "1.0.0",
+  "author": "Peter Vinter",
+  "license": "MIT",
+  "description": "When an app opens, a small card shows the keyboard shortcut that launches it, then fades out. If the app has none, Keytip suggests free combinations and adds the one you click to ~/.config/hypr/bindings.lua. Preview with: omarchy-shell keytip show <window-class>",
+  "kinds": ["service"],
+  "entryPoints": { "service": "Service.qml" }
+}

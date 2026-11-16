@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Prints what Keytip needs to know about the current keybindings:
+#   A <alias> <window class>   what "browser", "terminal" and "editor" resolve to
+#   B <modmask> <key> <description> <command>   one line per bind (see scan.lua)
+# Read-only apart from creating the plugin's state directory.
+
+here=$(dirname "$(readlink -f "$0")")
+
+mkdir -p "${XDG_STATE_HOME:-$HOME/.local/state}/peter.keytip" 2>/dev/null
+
+alias_line() {
+  [[ $2 =~ ^[A-Za-z0-9._-]+$ ]] && printf 'A\t%s\t%s\n' "$1" "$2"
+}
+
+browser=$(omarchy-cmd-default-browser 2>/dev/null)
+alias_line browser "${browser%.desktop}"
+
+terminals="${XDG_CONFIG_HOME:-$HOME/.config}/xdg-terminals.list"
+if [[ -f $terminals ]]; then
+  terminal=$(grep -m1 -v -e '^[[:space:]]*#' -e '^[[:space:]]*$' "$terminals")
+  alias_line terminal "${terminal%.desktop}"
+fi
+
+editor=nvim
+editor_file="$HOME/.local/state/omarchy/defaults/editor"
+[[ -f $editor_file ]] && read -r editor <"$editor_file"
+editor=${editor##*/}
+case $editor in
+nvim | vim | nano | micro | hx | helix | fresh) alias_line editor "org.omarchy.$editor" ;;
+*) alias_line editor "$editor" ;;
+esac
+
+command -v lua >/dev/null || exit 0
+
+# -E keeps LUA_INIT and LUA_PATH out of a run that loads the user's config;
+# the timeout backs up the instruction limit inside scan.lua.
+timeout 10 lua -E "$here/scan.lua" 2>/dev/null
+exit 0

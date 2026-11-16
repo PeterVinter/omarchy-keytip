@@ -1,0 +1,10 @@
+{
+  "ask.title": "%1 saknar genväg",
+  "ask.pick": "Välj en för att lägga till den:",
+  "ask.none": "Ingen ledig kombination att föreslå",
+  "ask.never": "Fråga inte för den här appen",
+  "ask.close": "Stäng",
+  "saving": "Lägger till %1…",
+  "saved": "%1 öppnar nu %2",
+  "error": "Kunde inte lägga till genvägen. bindings.lua är oförändrad."
+}

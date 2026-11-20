@@ -27,8 +27,47 @@ fail() {
 [[ -f $file ]] || fail "missing $file"
 command -v lua >/dev/null || fail "lua is needed to quote the binding"
 
-# The key must still be free: the config may have changed since the hint appeared.
-if grep -qF "\"$keys\"" "$file"; then
+# The key must still be free. Hyprland's own list of live binds is the
+# authority: it holds every bind however the config made it, so a scan that
+# missed one cannot let a second action onto the same key. The file is checked
+# too, for a bind that is written but not loaded.
+command -v jq >/dev/null || fail "jq is needed to check the binding"
+
+mask=0
+key=
+IFS='+' read -ra parts <<<"${keys// /}"
+for part in "${parts[@]}"; do
+  case $part in
+  SHIFT) ((mask += 1)) ;;
+  CTRL) ((mask += 4)) ;;
+  ALT) ((mask += 8)) ;;
+  SUPER) ((mask += 64)) ;;
+  *) key=${part,,} ;;
+  esac
+done
+
+# Is a bind with this modifier mask and key live in Hyprland? 0 yes, 1 no,
+# 2 Hyprland did not answer.
+bind_is_live() {
+  local live
+  live=$(hyprctl binds -j 2>/dev/null) || return 2
+  jq -e --argjson mask "$mask" --arg key "$key" \
+    'type == "array" and any(.[]; .modmask == $mask and ((.key | ascii_downcase) == $key))' \
+    <<<"$live" >/dev/null 2>&1
+  case $? in
+  0) return 0 ;;
+  1) return 1 ;;
+  *) return 2 ;;
+  esac
+}
+
+bind_is_live
+case $? in
+0) fail "$keys is already bound" ;;
+2) fail "Hyprland is not answering; nothing was changed" ;;
+esac
+
+if grep -qiF "\"$keys\"" "$file"; then
   fail "$keys is already bound in $file"
 fi
 
@@ -43,12 +82,36 @@ cp -p "$file" "$backup" || fail "could not back up $file"
 
 printf '\n-- %s (added by Keytip)\n%s\n' "$name" "$line" >>"$file" || fail "could not write $file"
 
-hyprctl reload >/dev/null 2>&1
-errors=$(hyprctl configerrors 2>/dev/null | tr -d '[:space:]')
-if [[ -n $errors ]]; then
+restore() {
   cp -p "$backup" "$file"
   hyprctl reload >/dev/null 2>&1
+}
+
+# Success needs three things: the reload ran, Hyprland reports no config
+# error (and answered the question), and the new bind is live. Anything else,
+# including Hyprland not answering, puts the file back.
+if ! hyprctl reload >/dev/null 2>&1; then
+  restore
+  fail "Hyprland did not answer the reload; bindings.lua restored"
+fi
+
+if ! errors=$(hyprctl configerrors 2>/dev/null); then
+  restore
+  fail "could not read Hyprland's config errors; bindings.lua restored"
+fi
+if [[ -n ${errors//[[:space:]]/} ]]; then
+  restore
   fail "Hyprland rejected the binding; bindings.lua restored"
+fi
+
+live=1
+for _ in 1 2 3 4 5; do
+  bind_is_live && { live=0; break; }
+  sleep 0.2
+done
+if ((live != 0)); then
+  restore
+  fail "the binding did not become active; bindings.lua restored"
 fi
 
 exit 0

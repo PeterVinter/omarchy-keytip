@@ -81,4 +81,13 @@ assert.strictEqual(M.cleanName("n".repeat(200)).length, 60)
 assert.deepStrictEqual(M.keycaps(77, "code:10"), ["SUPER", "SHIFT", "CTRL", "ALT", "1"])
 assert.deepStrictEqual(M.shellWords(`a 'b c' "d \\" e" f\\ g ''`), ["a", "b c", 'd " e', "f g", ""])
 
+// A scan counts as complete only when the scan says so; a run that stopped
+// early (error, time limit) or never printed the marker is not complete.
+assert.strictEqual(scan.complete, false)
+assert.strictEqual(M.parseScan("B\t64\tK\tK\tk\nE\tok\n").complete, true)
+assert.strictEqual(M.parseScan("B\t64\tK\tK\tk\nE\tpartial\tinstruction limit exceeded\n").complete, false)
+assert.strictEqual(M.parseScan("B\t64\tK\tK\tk\n").complete, false)
+assert.strictEqual(M.parseScan("").complete, false)
+assert.strictEqual(M.parseScan("B\t64\tK\tK\tk\nE\tok\n").binds.length, 1)
+
 console.log("ok")

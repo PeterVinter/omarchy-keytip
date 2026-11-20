@@ -11,12 +11,16 @@ var MAX_COMMAND = 400
 
 // Scan output: "A\t<alias>\t<class>" and "B\t<modmask>\t<key>\t<description>\t<command>".
 function parseScan(text) {
-  var scan = { binds: [], aliases: {} }
+  var scan = { binds: [], aliases: {}, complete: false }
   var lines = String(text || "").split("\n")
   for (var i = 0; i < lines.length && i < 5000; i++) {
     var f = lines[i].split("\t")
     if (f[0] === "A" && f.length >= 3) {
       scan.aliases[f[1]] = f[2].toLowerCase()
+    } else if (f[0] === "E") {
+      // The scan reached the end of the config; anything else means it
+      // stopped early (a config error, the time limit) and binds may be missing.
+      scan.complete = f[1] === "ok"
     } else if (f[0] === "B" && f.length >= 3) {
       var mods = parseInt(f[1], 10)
       if (!isFinite(mods) || !f[2]) continue

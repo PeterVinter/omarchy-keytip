@@ -19,7 +19,7 @@
 - **It fills the gaps.** An app without a shortcut gets up to three free combinations, checked against every binding in your Hyprland config.
 - **It stays out of the way.** A small card in the corner that never takes focus, shown at most once an hour per app. "Don't ask for this app" is permanent.
 - **It looks like Omarchy.** Colors, font and corners follow your theme, dark or light.
-- **It is careful with your config.** Keytip writes to `bindings.lua` only when you click, with a backup and a rollback if Hyprland rejects it.
+- **It is careful with your config.** Keytip writes to `bindings.lua` only when you click, with a backup, a check that the key is free in the running Hyprland, and a rollback if Hyprland rejects the binding or does not answer.
 
 ## What it does
 
@@ -79,16 +79,16 @@ Keytip writes to your configuration only when you click a suggested combination.
    o.bind("SUPER + SHIFT + D", "Media Player", { launch = "mpv --player-operation-mode=pseudo-gui --" })
    ```
 
-3. runs `hyprctl reload`, and restores the backup if Hyprland reports a config error.
+3. runs `hyprctl reload`, and restores the backup if the reload fails, Hyprland reports a config error or does not answer, or the new binding does not become active. Before step 1 it checks `hyprctl binds` and refuses a key that is already bound.
 
 Nothing else is written outside `~/.local/state/peter.keytip/`. Keytip uses no network and needs no root.
 
-To find shortcuts it loads `~/.config/hypr/hyprland.lua` in a separate `lua` process against a stand-in for Hyprland's API and records the bindings it makes. Hyprland itself does not report what a Lua binding launches, so the config is the only source. This runs your Hyprland config as Lua each time an app window opens (about 50 ms), with a time limit.
+To find shortcuts it loads `~/.config/hypr/hyprland.lua` in a separate `lua` process against a stand-in for Hyprland's API and records the bindings it makes. Hyprland itself does not report what a Lua binding launches, so the config is the only source. This runs your Hyprland config as Lua each time an app window opens (about 50 ms), with a time limit, in a sandbox: the config can read files and environment variables, but it cannot start programs, write or delete files, or load native modules. The only shell commands that run are the three read-only questions Omarchy's own config asks (the dictation backend, the cursor theme and the `*.lua` files of a directory); any other command gets an empty answer. If the config stops early, Keytip still shows known shortcuts but does not offer new ones, because the free combinations could already be taken.
 
 ## Requirements
 
 - Omarchy 4.x with the Lua Hyprland config.
-- `lua`, `hyprctl` and `bash`, all part of a standard Omarchy install.
+- `lua`, `hyprctl`, `jq` and `bash`, all part of a standard Omarchy install.
 
 ## Settings
 
@@ -107,6 +107,7 @@ Logic lives in `Model.js` and is tested without a GUI:
 
 ```bash
 node test/model.test.js
+bash test/scripts.test.sh   # scan sandbox and add-binding, against a fake hyprctl
 ```
 
 `scan-binds` prints the bindings Keytip sees, one per line, which is the quickest way to check why an app is or is not matched.

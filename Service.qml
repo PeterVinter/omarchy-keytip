@@ -133,6 +133,10 @@ Item {
       return
     }
 
+    // An offer needs the whole list of binds: from a scan that stopped early
+    // the "free" combinations could already be taken.
+    if (!result.complete) return
+
     // Only apps the launcher knows get an offer: no nagging for dialogs,
     // helper windows or terminal programs.
     if (!entry || entry.noDisplay || entry.runInTerminal) return

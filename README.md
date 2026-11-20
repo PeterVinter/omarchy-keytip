@@ -2,27 +2,31 @@
 
 # Keytip
 
-**Learn your launch shortcuts as you open apps.**
-
-An Omarchy shell plugin. When an app opens, a small card shows the keyboard
-shortcut that launches it, then fades out. If the app has none, Keytip suggests
-free combinations and adds the one you click.
+**Shows the shortcut for every app you open. No shortcut? Pick a free one and Keytip adds it.**
 
 <img src="https://img.shields.io/badge/Omarchy-4.x-a855f7?style=flat-square" alt="Omarchy 4.x">
 <img src="https://img.shields.io/badge/license-MIT-64748b?style=flat-square" alt="MIT">
 
 <br><br>
 
-<img src="preview.png" alt="Two Keytip cards: one offering free shortcuts for an app without one, one showing the shortcuts that launch Chromium" width="820">
+<img src="preview.png" alt="Keytip's three cards in three Omarchy themes: the shortcut that launches Chromium, three free combinations offered for an app without one, and the confirmation after one is added" width="900">
 
 </div>
 
+## Why you will want it
+
+- **You learn by doing.** The shortcut appears the moment the app opens, not in a cheat sheet you never read.
+- **It fills the gaps.** An app without a shortcut gets up to three free combinations, checked against every binding in your Hyprland config.
+- **It stays out of the way.** A small card in the corner that never takes focus, shown at most once an hour per app. "Don't ask for this app" is permanent.
+- **It looks like Omarchy.** Colors, font and corners follow your theme, dark or light.
+- **It is careful with your config.** Keytip writes to `bindings.lua` only when you click, with a backup and a rollback if Hyprland rejects it.
+
 ## What it does
 
-| | |
-|---|---|
-| **The app has a shortcut.** The card names it for 3.5 seconds and fades out. It cannot be clicked and never takes focus. | **The app has none.** The card suggests up to three combinations that are not bound to anything, and waits 12 seconds for a click. |
-| ![Card showing the shortcuts that launch Chromium](docs/screenshots/01-shortcut-known.png) | ![Card suggesting free combinations for an app without a shortcut](docs/screenshots/02-suggest-free-combinations.png) |
+| | | |
+|---|---|---|
+| **The app has a shortcut.** The card names it for 3.5 seconds and fades out. It cannot be clicked and never takes focus. | **The app has none.** The card suggests up to three combinations that are not bound to anything, and waits 12 seconds for a click. | **You click one.** The card confirms the new shortcut, and it works at once. |
+| ![Card showing the shortcuts that launch Chromium](docs/screenshots/01-shortcut-known.png) | ![Card suggesting free combinations for an app without a shortcut](docs/screenshots/02-suggest-free-combinations.png) | ![Card confirming that a shortcut was added](docs/screenshots/03-shortcut-added.png) |
 
 - Appears in the bottom corner of the focused monitor and fades out on its own.
 - Follows the current Omarchy theme: colors, font, corner radius and spacing.

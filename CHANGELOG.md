@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1
+
+Listing and documentation only; the plugin's behavior is unchanged.
+
+- **A short description.** The manifest description, shown on the marketplace card, is one sentence: "Shows the shortcut for every app you open. No shortcut? Pick a free one and Keytip adds it."
+- **A new preview image and a third screenshot.** The preview is now a 1920x1080 poster with the three cards (known shortcut, free suggestions, confirmation) in three Omarchy themes. The gallery has a new `03-shortcut-added.png`. The cards are real captures of the plugin; the confirmation card was triggered with a temporary demo call so that no binding was written.
+- **README first screen.** A one-line pitch, the new image, and a short "Why you will want it" list before the details.
+
 ## 1.0.0
 
 First release.
